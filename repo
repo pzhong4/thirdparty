@@ -10,69 +10,156 @@ import io
 import argparse  
 import xml.etree.ElementTree as ET  
 import textwrap  
+import difflib 
 
-def indent(elem, level=0):  
-    i = "\n" + level*"  "  
-    if len(elem):  
-        if not elem.text or not elem.text.strip():  
-            elem.text = i + "  "  
-        if not elem.tail or not elem.tail.strip():  
-            elem.tail = i  
-        for elem in elem:  
-            indent(elem, level+1)  
-        if not elem.tail or not elem.tail.strip():  
-            elem.tail = i  
-    else:  
-        if level and (not elem.tail or not elem.tail.strip()):  
-            elem.tail = i  
 
-def add_repo_to_xml(xml_file, repo_name, repo_url, repo_description):    
-    tree = ET.parse(xml_file)  
-    root = tree.getroot()  
-  
-    # add new repository element  
-    new_repo = ET.SubElement(root, 'repository')  
-    ET.SubElement(new_repo, 'name').text = repo_name  
-    ET.SubElement(new_repo, 'url').text = repo_url  
-    ET.SubElement(new_repo, 'description').text = repo_description  
-  
-    # keep xml format  
-    indent(root)
-  
-    # write xml  
-    tree = ET.ElementTree(root)  
-    with open('repositories_updated.xml', 'w', encoding='utf-8') as f:  
-        tree.write(f, encoding='unicode') 
+def fuzzy_comparison(s1, s2):  
+    return difflib.SequenceMatcher(None, s1.upper(), s2.upper()).ratio()  
+
+class Repository:
+    def __init__(self, repo_name, repo_url, repo_description):
+        self.repo_name = repo_name
+        self.repo_url = repo_url
+        self.repo_description = repo_description
+    def to_string(self)
+        return "name:{} url:{} description:{}".format(self.repo_name, self.repo_url, self.repo_description)
+
+class ManifestXmlParser:
+    def __init__(self, xml_file):
+        self.xml_file = xml_file
+        self.repository = []
+        self.update()
+
+    def update(self):
+        self.tree = ET.parse(self.xml_file)  
+        self.root = self.tree.getroot() 
+
+    def indent(self, elem, level=0):  
+        i = "\n" + level*"  "  
+        if len(elem):  
+            if not elem.text or not elem.text.strip():  
+                elem.text = i + "  "  
+            if not elem.tail or not elem.tail.strip():  
+                elem.tail = i  
+            for elem in elem:  
+                indent(elem, level+1)  
+            if not elem.tail or not elem.tail.strip():  
+                elem.tail = i  
+        else:  
+            if level and (not elem.tail or not elem.tail.strip()):  
+                elem.tail = i  
+
+    def add_repo_to_xml(self, repo_name, repo_url, repo_description):
+        root = self.root  
+        if self.is_exist(repo_name):
+            return
+        # add new repository element  
+        new_repo = ET.SubElement(root, 'repository')  
+        ET.SubElement(new_repo, 'name').text = repo_name  
+        ET.SubElement(new_repo, 'url').text = repo_url  
+        ET.SubElement(new_repo, 'description').text = repo_description  
+    
+        # keep xml format  
+        indent(root)
+    
+        # write xml  
+        tree = ET.ElementTree(root)  
+        with open('repositories_updated.xml', 'w', encoding='utf-8') as f:  
+            tree.write(f, encoding='unicode') 
  
+        self.update()
 
-def add(name, url, description):
-    add_repo_to_xml("manifest.xml", name, url, description)
+    def add(self, name, url, description):
+        self.add_repo_to_xml(name, url, description)
 
-def ArgumentParser():  
+    def search_by_tag(self, name):
+        root = self.root
+        for elem in root:
+            if elem.tag == name:
+                print("Tag name:{} exist!".format(name))
+                return True
+
+        return False
+
+    def search_by_name(self, name):
+        root = self.root
+        for elem in root:
+            if elem[0].text == name:
+                print("element name:{} exist!".format(name))
+                return True
+
+        return False
+
+
+    def is_exist(self, name):
+        return self.search_by_name(name) or self.search_by_tag(name)
+
+    def list_elem_names(self):
+        root = self.root
+        elems = []
+        for repo in root:
+            if repo.tag == "repository":
+                elems.append(repo[0].text)
+        
+        return elems
+
+    def test(self):
+
+        print(fuzzy_comparison("abc5", "abC4"))
+
+        print(self.list_elem_names())
+        root = self.root
+        # 遍历所有的元素  
+        #repos = ET.SubElement(root, 'repository')
+        #print(repos)
+        for repo in root:
+            #print(repo.tag)
+            repo_name = repo[0].text 
+            repo_url = repo[1].text
+            repo_description = repo[2].text
+            print("--name:{} --url:{} --description:{}".format(repo_name, repo_url, repo_description))
+
+
+def git-pull()
+
+def sync():
+    return None
+
+
+
+def main():  
     # 创建一个 ArgumentParser 对象  
     parser = argparse.ArgumentParser(description="repo --version:1.0.0")  
   
     # 添加命令行参数  
-    parser.add_argument("add", metavar="element", type=str, nargs="?", help="Add an element to the repository") 
-    parser.add_argument("-n", type=str, help="repository name")  
-    parser.add_argument("-u", type=str, help="repository url,use as: git clone 'url'")
-    parser.add_argument("-d", type=str, help="repository description")  
-    parser.add_argument("--debug", action="store_true", help="debug mode")  
+    parser.add_argument("add", metavar="add", type=str, nargs="?", help="Add an element to the repository")
+    parser.add_argument("delete", metavar="delete", type=str, nargs="?", help="Delete an element to the repository")
+    parser.add_argument("sync", metavar="sync", type=str, nargs="?", help="sync repository")    
+    parser.add_argument("--name", type=str, help="repository name")  
+    parser.add_argument("--url", type=str, help="repository url,use as: git clone 'url'")
+    parser.add_argument("--description", type=str, help="repository description")  
+    parser.add_argument("--debug", action="store_true", help="debug mode")
+    parser.add_argument("--test", action="store_true", help="run test")  
   
+    manifestxmlarser = ManifestXmlParser("manifest.xml")
     # 解析命令行参数  
-    args = parser.parse_args()  
-    if args.add:
-        print("add repository. --name:{} --url:{} --description:{}".format(args.n, args.u, args.d))
-        add(args.n, args.u, args.d)  
-    elif args.debug:  
-        print("Debug mode is on.")  
-    else:  
+    args = parser.parse_args()
+
+    if args.debug:  
+        print("Debug mode is {}.".format(args.debug))
+  
+    if args.add == 'add':
+        print(args.add)
+        print("add repository. --name:{} --url:{} --description:{}".format(args.name, args.url, args.description))
+        manifestxmlarser.add(args.name, args.url, args.description)
+    elif args.delete == 'delete':
+        print(args.delete)
+    elif args.sync == 'sync':
+        print(args.sync)
+    elif args.test:
+        manifestxmlarser.test()
+    else:
         parser.print_help()
-
-
-
-def main():
-    ArgumentParser()
     
  
 
