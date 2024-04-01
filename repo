@@ -1,0 +1,80 @@
+#! /usr/bin/python
+# coding=utf-8
+#####################################################
+# File Name: repo
+# Author: zhongpeng
+# mail: pzhong4@jmc.com.cn
+# Created Time: Fri Mar 29 17:26:03 CST 2024
+#####################################################
+import io 
+import argparse  
+import xml.etree.ElementTree as ET  
+import textwrap  
+
+def indent(elem, level=0):  
+    i = "\n" + level*"  "  
+    if len(elem):  
+        if not elem.text or not elem.text.strip():  
+            elem.text = i + "  "  
+        if not elem.tail or not elem.tail.strip():  
+            elem.tail = i  
+        for elem in elem:  
+            indent(elem, level+1)  
+        if not elem.tail or not elem.tail.strip():  
+            elem.tail = i  
+    else:  
+        if level and (not elem.tail or not elem.tail.strip()):  
+            elem.tail = i  
+
+def add_repo_to_xml(xml_file, repo_name, repo_url, repo_description):    
+    tree = ET.parse(xml_file)  
+    root = tree.getroot()  
+  
+    # add new repository element  
+    new_repo = ET.SubElement(root, 'repository')  
+    ET.SubElement(new_repo, 'name').text = repo_name  
+    ET.SubElement(new_repo, 'url').text = repo_url  
+    ET.SubElement(new_repo, 'description').text = repo_description  
+  
+    # keep xml format  
+    indent(root)
+  
+    # write xml  
+    tree = ET.ElementTree(root)  
+    with open('repositories_updated.xml', 'w', encoding='utf-8') as f:  
+        tree.write(f, encoding='unicode') 
+ 
+
+def add(name, url, description):
+    add_repo_to_xml("manifest.xml", name, url, description)
+
+def ArgumentParser():  
+    # 创建一个 ArgumentParser 对象  
+    parser = argparse.ArgumentParser(description="repo --version:1.0.0")  
+  
+    # 添加命令行参数  
+    parser.add_argument("add", metavar="element", type=str, nargs="?", help="Add an element to the repository") 
+    parser.add_argument("-n", type=str, help="repository name")  
+    parser.add_argument("-u", type=str, help="repository url,use as: git clone 'url'")
+    parser.add_argument("-d", type=str, help="repository description")  
+    parser.add_argument("--debug", action="store_true", help="debug mode")  
+  
+    # 解析命令行参数  
+    args = parser.parse_args()  
+    if args.add:
+        print("add repository. --name:{} --url:{} --description:{}".format(args.n, args.u, args.d))
+        add(args.n, args.u, args.d)  
+    elif args.debug:  
+        print("Debug mode is on.")  
+    else:  
+        parser.print_help()
+
+
+
+def main():
+    ArgumentParser()
+    
+ 
+
+if __name__ == "__main__":  
+    main()
