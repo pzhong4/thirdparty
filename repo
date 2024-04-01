@@ -21,7 +21,7 @@ class Repository:
         self.repo_name = repo_name
         self.repo_url = repo_url
         self.repo_description = repo_description
-    def to_string(self)
+    def to_string(self):
         return "name:{} url:{} description:{}".format(self.repo_name, self.repo_url, self.repo_description)
 
 class ManifestXmlParser:
@@ -42,7 +42,7 @@ class ManifestXmlParser:
             if not elem.tail or not elem.tail.strip():  
                 elem.tail = i  
             for elem in elem:  
-                indent(elem, level+1)  
+                self.indent(elem, level+1)  
             if not elem.tail or not elem.tail.strip():  
                 elem.tail = i  
         else:  
@@ -60,11 +60,11 @@ class ManifestXmlParser:
         ET.SubElement(new_repo, 'description').text = repo_description  
     
         # keep xml format  
-        indent(root)
+        self.indent(root)
     
         # write xml  
         tree = ET.ElementTree(root)  
-        with open('repositories_updated.xml', 'w', encoding='utf-8') as f:  
+        with open(self.xml_file, 'w', encoding='utf-8') as f:  
             tree.write(f, encoding='unicode') 
  
         self.update()
@@ -119,8 +119,6 @@ class ManifestXmlParser:
             repo_description = repo[2].text
             print("--name:{} --url:{} --description:{}".format(repo_name, repo_url, repo_description))
 
-
-def git-pull()
 
 def sync():
     return None

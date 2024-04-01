@@ -1,13 +1,17 @@
-<?xml version='1.0' encoding='utf-8'?>
 <git-repositories>
-    <repository>
-        <name>Repository1</name>
-        <url>https://github.com/user/repo1.git</url>
-        <description>Description for Repository 1</description>
-    </repository>
-    <repository>
-        <name>Repository2</name>
-        <url>https://github.com/user/repo2.git</url>
-        <description>Description for Repository 2</description>
-    </repository>
+  <repository>
+    <name>Repository1</name>
+    <url>https://github.com/user/repo1.git</url>
+    <description>Description for Repository 1</description>
+  </repository>
+  <repository>
+    <name>Repository2</name>
+    <url>https://github.com/user/repo2.git</url>
+    <description>Description for Repository 2</description>
+  </repository>
+  <repository>
+    <name>x</name>
+    <url>xxxx.com</url>
+    <description>test only</description>
+  </repository>
 </git-repositories>
