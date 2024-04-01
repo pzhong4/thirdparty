@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<git-repositories>
+    <repository>
+        <name>Repository 1</name>
+        <url>https://github.com/user/repo1.git</url>
+        <description>Description for Repository 1</description>
+    </repository>
+</git-repositories>
